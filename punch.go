@@ -5,6 +5,8 @@ import (
 	"github.com/sclevine/agouti"
 )
 
+var login *Login
+
 func (b *Bot) punchClock() ([]slack.Attachment, error) {
 
 	// ブラウザはChromeを指定して起動

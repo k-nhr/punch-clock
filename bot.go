@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -13,6 +14,11 @@ type Bot struct {
 	rtm *slack.RTM
 }
 
+type Login struct {
+	ID string `json: id`
+	PW string `json: pw`
+}
+
 var (
 	botID   string
 	botName string
@@ -20,6 +26,13 @@ var (
 
 func bot() {
 	token := os.Getenv("SLACK_API_TOKEN")
+
+	var err error
+	login, err = getLoginInfo()
+	if err != nil {
+		return
+	}
+
 	b := newBot(token)
 
 	go b.rtm.ManageConnection()
@@ -56,6 +69,22 @@ func newBot(token string) *Bot {
 	bot.api.SetDebug(true)
 	bot.rtm = bot.api.NewRTM()
 	return bot
+}
+
+const infoFile = "loginInfo.json"
+
+func getLoginInfo() (*Login, error) {
+	file, err := os.Open(infoFile)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	login := new(Login)
+	if err := json.NewDecoder(file).Decode(login); err != nil {
+		return nil, err
+	}
+	return login, nil
 }
 
 func (b *Bot) handleResponse(user, text, channel string) {
